@@ -7,28 +7,16 @@
 
 package com.vesoft.nebula.tools.connector.writer
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, TimeUnit}
 
 import com.google.common.base.Optional
 import com.google.common.net.HostAndPort
-import com.google.common.util.concurrent.{FutureCallback, Futures, RateLimiter}
+import com.google.common.util.concurrent.{FutureCallback, Futures, MoreExecutors, RateLimiter}
 import com.vesoft.nebula.client.graph.async.AsyncGraphClientImpl
 import com.vesoft.nebula.tools.connector.exception.GraphExecuteException
-import com.vesoft.nebula.tools.connector.{
-  DataTypeEnum,
-  EdgeRank,
-  KeyPolicy,
-  NebulaOptions,
-  NebulaTemplate,
-  NebulaUtils
-}
+import com.vesoft.nebula.tools.connector.{DataTypeEnum, EdgeRank, KeyPolicy, NebulaOptions, NebulaTemplate, NebulaUtils}
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.sources.v2.writer.{
-  DataSourceWriter,
-  DataWriter,
-  DataWriterFactory,
-  WriterCommitMessage
-}
+import org.apache.spark.sql.sources.v2.writer.{DataSourceWriter, DataWriter, DataWriterFactory, WriterCommitMessage}
 import org.apache.spark.sql.types.{DataType, StructType}
 import org.slf4j.LoggerFactory
 
@@ -91,7 +79,7 @@ class NebulaVertexWriter(address: List[HostAndPort],
             LOG.error(s"failed to execute {$exec}")
             throw new GraphExecuteException(s"failed to execute {$exec}")
           }
-        }
+        },MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(50))
       )
     } else {
       LOG.error(s"failed to acquire reteLimiter for statement {$exec}")
@@ -188,7 +176,7 @@ class NebulaEdgeWriter(address: List[HostAndPort],
             LOG.error(s"failed to execute {$exec}")
             throw new GraphExecuteException(s"failed to execute {$exec}")
           }
-        }
+        },MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(50))
       )
     } else {
       LOG.error(s"failed to acquire reteLimiter for statement {$exec}")

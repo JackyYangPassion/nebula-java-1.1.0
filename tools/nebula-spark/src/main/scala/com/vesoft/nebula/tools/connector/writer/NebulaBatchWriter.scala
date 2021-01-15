@@ -7,21 +7,16 @@
 
 package com.vesoft.nebula.tools.connector.writer
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, TimeUnit}
 
 import com.google.common.base.Optional
 import com.google.common.net.HostAndPort
-import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture, RateLimiter}
+import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFuture, ListeningExecutorService, MoreExecutors, RateLimiter}
 import com.vesoft.nebula.client.graph.async.AsyncGraphClientImpl
 import com.vesoft.nebula.tools.connector.DataTypeEnum.{EDGE, VERTEX}
 import com.vesoft.nebula.tools.connector.exception.{GraphExecuteException, IllegalOptionException}
-import com.vesoft.nebula.tools.connector.{
-  DataTypeEnum,
-  KeyPolicy,
-  NebulaOptions,
-  NebulaUtils,
-  OperaType
-}
+import com.vesoft.nebula.tools.connector.{DataTypeEnum, KeyPolicy, NebulaOptions, NebulaUtils, OperaType}
+import org.apache.spark.executor
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.{DataFrame, Encoders, Row}
 import org.apache.spark.sql.types.{DataType, StructType}
@@ -89,7 +84,7 @@ class NebulaBatchWriter(address: List[HostAndPort], nebulaOptions: NebulaOptions
                   LOG.error(s"failed to execute {$exec}")
                   throw new GraphExecuteException(s"failed to execute {$exec}")
                 }
-              }
+              },MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(50))
             )
           } else {
             LOG.error(s"failed to acquire reteLimiter for statement {$exec}")
@@ -153,7 +148,7 @@ class NebulaBatchWriter(address: List[HostAndPort], nebulaOptions: NebulaOptions
                   LOG.error(s"failed to execute {$exec}")
                   throw new GraphExecuteException(s"failed to execute {$exec}")
                 }
-              }
+              },MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(50))
             )
           } else {
             LOG.error(s"failed to acquire reteLimiter for statement {$exec}")

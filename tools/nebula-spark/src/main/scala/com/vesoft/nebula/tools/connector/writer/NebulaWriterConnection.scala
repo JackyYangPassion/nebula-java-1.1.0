@@ -7,15 +7,16 @@
 
 package com.vesoft.nebula.tools.connector.writer
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, TimeUnit}
 
 import com.google.common.base.Optional
 import com.google.common.net.HostAndPort
-import com.google.common.util.concurrent.{FutureCallback, Futures, RateLimiter}
+import com.google.common.util.concurrent.{FutureCallback, Futures, MoreExecutors, RateLimiter}
 import com.vesoft.nebula.client.graph.async.AsyncGraphClientImpl
 import com.vesoft.nebula.graph.ErrorCode
 import com.vesoft.nebula.tools.connector.{ConnectionException, NebulaOptions, NebulaTemplate}
 import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConverters._
 
 class NebulaConnection(address: List[HostAndPort], nebulaOptions: NebulaOptions)
@@ -62,7 +63,7 @@ class NebulaConnection(address: List[HostAndPort], nebulaOptions: NebulaOptions)
           override def onFailure(t: Throwable): Unit = {
             LOG.error(s"failed to execute {$useSpace}")
           }
-        }
+        },MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(50))
       )
     } else {
       LOG.error(s"failed to acquire rateLimiter for statement {$useSpace}")
